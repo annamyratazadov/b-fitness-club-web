@@ -64,6 +64,9 @@
   "members": {
     "title": "Member Management",
     "addNew": "Add New Member",
+    "addExisting": "Add Existing Member",
+    "newMemberDescription": "Membership starts today.",
+    "existingMemberDescription": "Add an existing member with a past start date.",
     "list": "Member List",
     "detail": "Member Detail",
     "firstName": "First Name",

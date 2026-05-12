@@ -1,12 +1,19 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, Loader2, Calendar } from "lucide-react";
+import {
+  AlertCircle,
+  Loader2,
+  CalendarClock,
+  User,
+  CreditCard,
+  Info,
+} from "lucide-react";
 import { createMember, updateMember } from "@/lib/actions/members";
 
 interface Package {
@@ -28,33 +35,67 @@ interface Profile {
   address: string;
 }
 
+type Mode = "new" | "existing" | "edit";
+
 interface Props {
   packages: Package[];
   locale: string;
   member?: Profile;
+  mode?: Mode;
 }
 
-export default function MemberForm({ packages, locale, member }: Props) {
+function formatDateTR(d: Date) {
+  return d.toLocaleDateString("tr-TR", { day: "2-digit", month: "long", year: "numeric" });
+}
+
+function addDays(date: Date, days: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+export default function MemberForm({ packages, locale, member, mode: modeProp }: Props) {
   const isEdit = !!member;
+  const mode: Mode = isEdit ? "edit" : modeProp ?? "new";
+
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [manualDate, setManualDate] = useState(false);
   const router = useRouter();
 
   const today = new Date().toISOString().split("T")[0];
 
+  // Live preview state
+  const [selectedPkgId, setSelectedPkgId] = useState("");
+  const [startDateInput, setStartDateInput] = useState(today);
+  const [paymentInput, setPaymentInput] = useState("");
+
+  const selectedPkg = useMemo(
+    () => packages.find((p) => p.id === selectedPkgId) ?? null,
+    [packages, selectedPkgId]
+  );
+
+  // Live computed end date for preview
+  const previewStart = mode === "existing" ? startDateInput : today;
+  const previewEndDate = selectedPkg
+    ? addDays(new Date(previewStart), selectedPkg.duration_days)
+    : null;
+  const previewIsActive = previewEndDate ? previewEndDate >= new Date(today) : true;
+
   const studentPackages = packages.filter((p) => p.package_type === "student");
   const normalPackages = packages.filter((p) => p.package_type === "normal");
+
+  function handlePackageChange(id: string) {
+    setSelectedPkgId(id);
+    const pkg = packages.find((p) => p.id === id);
+    if (pkg) setPaymentInput(String(pkg.price));
+  }
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
     const formData = new FormData(e.currentTarget);
     formData.set("locale", locale);
-
-    if (!manualDate) {
-      formData.set("start_date", today);
-    }
+    if (!isEdit) formData.set("mode", mode);
 
     startTransition(async () => {
       const result = isEdit
@@ -64,13 +105,39 @@ export default function MemberForm({ packages, locale, member }: Props) {
     });
   }
 
+  // Mode-specific UI text
+  const headerHint =
+    mode === "existing" ? (
+      <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+        <Info className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+        <div className="text-sm text-blue-900">
+          <strong>Mevcut üye kaydı.</strong> Bu form, salonu zaten kullanan ve üyelik
+          başlangıç tarihi geçmişte olan bir üyeyi sisteme eklemek içindir. Başlangıç
+          tarihini girin — bitiş tarihi paket süresine göre otomatik hesaplanacaktır.
+        </div>
+      </div>
+    ) : mode === "new" ? (
+      <div className="flex items-start gap-2 bg-orange-50 border border-orange-200 rounded-lg p-3 mb-6">
+        <Info className="w-5 h-5 text-orange-600 shrink-0 mt-0.5" />
+        <div className="text-sm text-orange-900">
+          <strong>Yeni üye kaydı.</strong> Üyelik <strong>bugünden</strong> başlar.
+          Geçmiş tarihten başlatmak için &quot;Mevcut Üye Ekle&quot; sayfasını kullanın.
+        </div>
+      </div>
+    ) : null;
+
   return (
     <Card>
       <CardContent className="pt-6">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        {headerHint}
+
+        <form onSubmit={handleSubmit} className="space-y-8">
           {/* Personal Info */}
-          <div>
-            <h3 className="font-semibold text-gray-700 mb-4 pb-2 border-b">Kişisel Bilgiler</h3>
+          <section>
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b">
+              <User className="w-4 h-4 text-gray-500" />
+              <h3 className="font-semibold text-gray-700">Kişisel Bilgiler</h3>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="first_name">Ad *</Label>
@@ -105,6 +172,7 @@ export default function MemberForm({ packages, locale, member }: Props) {
                   placeholder="05XX XXX XX XX"
                   className="mt-1"
                 />
+                <p className="text-xs text-gray-400 mt-1">Üye, bu numara ile giriş yapacak.</p>
               </div>
               <div>
                 <Label htmlFor="birth_date">Doğum Tarihi *</Label>
@@ -114,6 +182,7 @@ export default function MemberForm({ packages, locale, member }: Props) {
                   type="date"
                   required
                   defaultValue={member?.birth_date}
+                  max={today}
                   className="mt-1"
                 />
               </div>
@@ -151,12 +220,15 @@ export default function MemberForm({ packages, locale, member }: Props) {
                 />
               </div>
             </div>
-          </div>
+          </section>
 
-          {/* Package & Password — only for new members */}
+          {/* Package + Auth — only for create modes */}
           {!isEdit && (
-            <div>
-              <h3 className="font-semibold text-gray-700 mb-4 pb-2 border-b">Üyelik & Giriş Bilgileri</h3>
+            <section>
+              <div className="flex items-center gap-2 mb-4 pb-2 border-b">
+                <CreditCard className="w-4 h-4 text-gray-500" />
+                <h3 className="font-semibold text-gray-700">Üyelik & Giriş Bilgileri</h3>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="md:col-span-2">
                   <Label htmlFor="package_id">Üyelik Paketi *</Label>
@@ -164,6 +236,8 @@ export default function MemberForm({ packages, locale, member }: Props) {
                     id="package_id"
                     name="package_id"
                     required
+                    value={selectedPkgId}
+                    onChange={(e) => handlePackageChange(e.target.value)}
                     className="w-full mt-1 px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                   >
                     <option value="">Paket seçin...</option>
@@ -188,50 +262,110 @@ export default function MemberForm({ packages, locale, member }: Props) {
                   </select>
                 </div>
 
+                {/* Start date — only for existing-member flow */}
+                {mode === "existing" && (
+                  <div>
+                    <Label htmlFor="start_date" className="flex items-center gap-1">
+                      <CalendarClock className="w-3.5 h-3.5" />
+                      Başlangıç Tarihi *
+                    </Label>
+                    <Input
+                      id="start_date"
+                      name="start_date"
+                      type="date"
+                      required
+                      max={today}
+                      value={startDateInput}
+                      onChange={(e) => setStartDateInput(e.target.value)}
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      Üyenin gerçek başlangıç tarihi (bugünden sonra olamaz).
+                    </p>
+                  </div>
+                )}
+
                 <div>
+                  <Label htmlFor="payment_amount">Ödeme Tutarı (₺)</Label>
+                  <Input
+                    id="payment_amount"
+                    name="payment_amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={paymentInput}
+                    onChange={(e) => setPaymentInput(e.target.value)}
+                    placeholder={selectedPkg ? String(selectedPkg.price) : "0.00"}
+                    className="mt-1"
+                  />
+                  {selectedPkg && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Paket fiyatı: ₺{selectedPkg.price.toLocaleString("tr-TR")} — indirim için
+                      değiştirin.
+                    </p>
+                  )}
+                </div>
+
+                <div className={mode === "existing" ? "md:col-span-2" : ""}>
                   <Label htmlFor="password">Üye Giriş Şifresi *</Label>
                   <Input
                     id="password"
                     name="password"
                     type="password"
-                    required={!isEdit}
+                    required
                     placeholder="En az 6 karakter"
                     className="mt-1"
                   />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Üye bu şifreyle telefon numarasıyla giriş yapacak.
+                  <p className="text-xs text-gray-400 mt-1">
+                    Üye, telefon numarası + bu şifre ile giriş yapacak.
                   </p>
                 </div>
+              </div>
 
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <input
-                      type="checkbox"
-                      id="manual_date"
-                      checked={manualDate}
-                      onChange={(e) => setManualDate(e.target.checked)}
-                      className="w-4 h-4"
-                    />
-                    <Label htmlFor="manual_date" className="cursor-pointer flex items-center gap-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      Geçmiş tarihten başlat
-                    </Label>
+              {/* Live Preview */}
+              {selectedPkg && (
+                <div className="mt-5 rounded-lg border border-orange-200 bg-orange-50 p-4">
+                  <div className="text-xs uppercase tracking-wide text-orange-600 font-semibold mb-2">
+                    Üyelik Özeti
                   </div>
-                  {manualDate && (
-                    <Input
-                      name="start_date"
-                      type="date"
-                      defaultValue={today}
-                      max={today}
-                      required={manualDate}
-                    />
-                  )}
-                  {!manualDate && (
-                    <p className="text-xs text-gray-400">Başlangıç tarihi: Bugün ({new Date().toLocaleDateString("tr-TR")})</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                    <div>
+                      <div className="text-gray-500 text-xs">Paket</div>
+                      <div className="font-semibold text-gray-900">{selectedPkg.name}</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs">Başlangıç</div>
+                      <div className="font-semibold text-gray-900">
+                        {formatDateTR(new Date(previewStart))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs">Bitiş</div>
+                      <div className="font-semibold text-gray-900">
+                        {previewEndDate ? formatDateTR(previewEndDate) : "-"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-gray-500 text-xs">Durum</div>
+                      <div
+                        className={`font-semibold ${
+                          previewIsActive ? "text-green-700" : "text-red-600"
+                        }`}
+                      >
+                        {previewIsActive ? "Aktif olacak" : "Süresi dolmuş olacak"}
+                      </div>
+                    </div>
+                  </div>
+                  {!previewIsActive && (
+                    <div className="mt-3 text-xs text-red-700 flex items-center gap-1.5">
+                      <AlertCircle className="w-3.5 h-3.5" />
+                      Bu üyeliğin bitiş tarihi geçmişte kalıyor — kayıt edildiğinde
+                      &quot;süresi dolmuş&quot; olarak işaretlenecek.
+                    </div>
                   )}
                 </div>
-              </div>
-            </div>
+              )}
+            </section>
           )}
 
           {error && (
@@ -262,8 +396,10 @@ export default function MemberForm({ packages, locale, member }: Props) {
                 </>
               ) : isEdit ? (
                 "Güncelle"
+              ) : mode === "existing" ? (
+                "Mevcut Üyeyi Kaydet"
               ) : (
-                "Üye Ekle"
+                "Yeni Üye Ekle"
               )}
             </Button>
           </div>

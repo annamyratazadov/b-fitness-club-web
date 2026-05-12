@@ -1,10 +1,9 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronRight as ArrowRightIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -14,9 +13,10 @@ type Member = any & {
   last_name: string;
   phone: string;
   status: string;
+  created_at: string;
   active_membership: Record<string, unknown> | null;
   days_remaining: number | null;
-}
+};
 
 interface Props {
   members: Member[];
@@ -76,10 +76,31 @@ export default function MembersTable({ members, locale, page, totalPages }: Prop
                   ? "text-orange-500 font-semibold"
                   : "text-green-600";
 
+              // Detect retroactively added members (start_date significantly before created_at)
+              const startStr = member.active_membership?.start_date as string | undefined;
+              const isRetroactive =
+                startStr && member.created_at
+                  ? new Date(member.created_at).getTime() - new Date(startStr).getTime() >
+                    2 * 86400000
+                  : false;
+
               return (
-                <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={member.id}
+                  onClick={() => router.push(`/${locale}/admin/members/${member.id}`)}
+                  className="hover:bg-orange-50/40 transition-colors cursor-pointer"
+                >
                   <td className="px-4 py-3 font-medium text-gray-900">
-                    {member.first_name} {member.last_name}
+                    <div className="flex items-center gap-2">
+                      <span>
+                        {member.first_name} {member.last_name}
+                      </span>
+                      {isRetroactive && (
+                        <Badge className="bg-blue-50 text-blue-700 text-[10px] px-1.5 py-0">
+                          Mevcut
+                        </Badge>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-gray-600">{member.phone}</td>
                   <td className="px-4 py-3 text-gray-600">
@@ -106,12 +127,8 @@ export default function MembersTable({ members, locale, page, totalPages }: Prop
                       {member.status === "active" ? "Aktif" : "Pasif"}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3">
-                    <Link href={`/${locale}/admin/members/${member.id}`}>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                    </Link>
+                  <td className="px-4 py-3 text-right">
+                    <ArrowRightIcon className="w-4 h-4 text-gray-300 inline" />
                   </td>
                 </tr>
               );
@@ -124,7 +141,7 @@ export default function MembersTable({ members, locale, page, totalPages }: Prop
       {totalPages > 1 && (
         <div className="flex items-center justify-between px-4 py-3 border-t bg-gray-50">
           <p className="text-sm text-gray-500">
-            Sayfa {page} / {totalPages}
+            Sayfa <span className="font-semibold">{page}</span> / {totalPages}
           </p>
           <div className="flex gap-2">
             <Button

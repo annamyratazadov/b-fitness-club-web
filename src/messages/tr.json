@@ -64,6 +64,9 @@
   "members": {
     "title": "Üye Yönetimi",
     "addNew": "Yeni Üye Ekle",
+    "addExisting": "Mevcut Üye Ekle",
+    "newMemberDescription": "Üyelik bugünden başlatılır.",
+    "existingMemberDescription": "Geçmiş başlangıç tarihi ile mevcut üyeyi sisteme ekleyin.",
     "list": "Üye Listesi",
     "detail": "Üye Detayı",
     "firstName": "Ad",

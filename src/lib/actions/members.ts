@@ -10,10 +10,25 @@ function phoneToEmail(phone: string): string {
 
 export async function createMember(formData: FormData) {
   const locale = (formData.get("locale") as string) || "tr";
+  const mode = ((formData.get("mode") as string) || "new") as "new" | "existing";
   const phone = (formData.get("phone") as string).trim();
   const password = formData.get("password") as string;
   const packageId = formData.get("package_id") as string;
-  const startDate = (formData.get("start_date") as string) || new Date().toISOString().split("T")[0];
+  const today = new Date().toISOString().split("T")[0];
+
+  // For "new": always use today. For "existing": use the form-provided start_date.
+  let startDate = today;
+  if (mode === "existing") {
+    const provided = (formData.get("start_date") as string) || "";
+    if (!provided) {
+      return { error: "Mevcut üye için başlangıç tarihi zorunludur." };
+    }
+    // Guard: start_date must not be in the future
+    if (new Date(provided) > new Date(today)) {
+      return { error: "Başlangıç tarihi bugünden sonra olamaz." };
+    }
+    startDate = provided;
+  }
 
   const supabase = await createClient();
   const adminSupabase = await createAdminClient();
@@ -43,6 +58,14 @@ export async function createMember(formData: FormData) {
   const endDate = new Date(startDate);
   endDate.setDate(endDate.getDate() + pkg.duration_days);
   const endDateStr = endDate.toISOString().split("T")[0];
+
+  // is_active: only true if end_date is in the future (i.e., membership not yet expired)
+  const isActive = endDate >= new Date(today);
+
+  // Custom payment amount (admin can apply a discount); fallback to package price
+  const paymentRaw = formData.get("payment_amount") as string | null;
+  const paymentAmount =
+    paymentRaw && !isNaN(parseFloat(paymentRaw)) ? parseFloat(paymentRaw) : pkg.price;
 
   // Create auth user with service role
   const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
@@ -84,8 +107,8 @@ export async function createMember(formData: FormData) {
     package_id: packageId,
     start_date: startDate,
     end_date: endDateStr,
-    payment_amount: pkg.price,
-    is_active: true,
+    payment_amount: paymentAmount,
+    is_active: isActive,
   });
 
   if (membershipError) {
@@ -94,7 +117,8 @@ export async function createMember(formData: FormData) {
   }
 
   revalidatePath(`/${locale}/admin/members`);
-  redirect(`/${locale}/admin/members`);
+  revalidatePath(`/${locale}/admin/dashboard`);
+  redirect(`/${locale}/admin/members/${userId}`);
 }
 
 export async function updateMember(id: string, formData: FormData) {

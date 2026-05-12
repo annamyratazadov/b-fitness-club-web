@@ -2,9 +2,9 @@ import Link from "next/link";
 import { getPackages } from "@/lib/services/packages";
 import MemberForm from "@/components/admin/MemberForm";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, UserPlus } from "lucide-react";
+import { ArrowLeft, History } from "lucide-react";
 
-export default async function NewMemberPage({
+export default async function ExistingMemberPage({
   params,
 }: {
   params: Promise<{ locale: string }>;
@@ -21,15 +21,17 @@ export default async function NewMemberPage({
         </Button>
       </Link>
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center">
-          <UserPlus className="w-5 h-5 text-orange-600" />
+        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+          <History className="w-5 h-5 text-blue-600" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Yeni Üye Ekle</h1>
-          <p className="text-sm text-gray-500">Üyelik bugünden başlatılır.</p>
+          <h1 className="text-2xl font-bold text-gray-900">Mevcut Üye Ekle</h1>
+          <p className="text-sm text-gray-500">
+            Salonu zaten kullanan üyeyi geçmiş başlangıç tarihi ile sisteme ekleyin.
+          </p>
         </div>
       </div>
-      <MemberForm packages={packages} locale={locale} mode="new" />
+      <MemberForm packages={packages} locale={locale} mode="existing" />
     </div>
   );
 }
