@@ -65,7 +65,7 @@ const FEATURES = [
 
 const STATS = [
   { n: "1200+", l: "Aktif Üye" },
-  { n: "10+",   l: "Yıl Deneyim" },
+  { n: "30+",   l: "Yıl Deneyim" },
   { n: "50+",   l: "Fitness Ekipmanı" },
   { n: "%99",   l: "Üye Memnuniyeti" },
 ];
@@ -380,8 +380,8 @@ function Contact() {
               <div className="txt">
                 <div className="label">Adres</div>
                 <div className="val">
-                  Kavacık Mahallesi Mihrabad Caddesi &amp;, Yayabeyi Sk. No:34 D:C,
-                  34810 Beykoz/İstanbul
+                  Kavacık Mahallesi Orhan Veli Kanık cd. No:34,
+                  Beykoz/İstanbul
                 </div>
               </div>
             </div>
@@ -437,8 +437,8 @@ function CtaBanner() {
     <section className="sec reveal" style={{ paddingTop: 40, paddingBottom: 40 }}>
       <div className="cta-banner">
         <div>
-          <h2>İlk Antrenman Bizden. Sen Sadece Gel.</h2>
-          <p>Ücretsiz deneme dersi + fitness değerlendirme. Hiçbir taahhüt yok, sadece gelip tanış.</p>
+          <h2>3 Arkadaş Getir, 1 Ay Bedava!</h2>
+          <p>Arkadaşlarını da sağlıklı yaşama davet et — sen kazan, onlar kazan. Hemen başla!</p>
           <div className="ctas">
             <a className="btn btn-primary" href="#paketler">Deneme Dersi Al <ArrowRight size={16} /></a>
             <a className="btn btn-ghost" href="tel:+902166932165">0216 693 21 65</a>
@@ -501,9 +501,8 @@ function Footer({ locale }: { locale: string }) {
         <div>
           <h5>İletişim</h5>
           <ul>
-            <li>Kavacık Mah. Mihrabad Cd.</li>
-            <li>Yayabeyi Sk. No:34</li>
-            <li>Beykoz / İstanbul</li>
+            <li>Kavacık Mah. Orhan Veli Kanık Cd.</li>
+            <li>No:34, Beykoz / İstanbul</li>
             <li><a href="tel:+902166932165">0216 693 21 65</a></li>
           </ul>
         </div>
