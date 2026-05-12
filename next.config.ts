@@ -6,7 +6,11 @@ const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
 const nextConfig: NextConfig = {
   experimental: {
     serverActions: {
-      allowedOrigins: ["localhost:3000"],
+      allowedOrigins: [
+        "localhost:3000",
+        "bfitnessclub.com",
+        "www.bfitnessclub.com",
+      ],
     },
   },
   images: {
