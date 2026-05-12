@@ -543,12 +543,28 @@ function MobileMenu({ open, onClose, locale }: { open: boolean; onClose: () => v
 
 // ── Main Client Component ─────────────────────────────────────────────
 export default function LandingClient({ locale, priceMap }: { locale: string; priceMap: PriceMap }) {
-  const [dark, setDark] = useState(true);
+  const [dark, setDarkState] = useState(true); // SSR-safe default
   const [menuOpen, setMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   const rootRef = useRef<HTMLDivElement>(null);
   useReveal(rootRef);
+
+  // On mount: restore saved preference or pick by time (06:00–19:00 → light)
+  useEffect(() => {
+    const saved = localStorage.getItem("bfc-theme");
+    if (saved !== null) {
+      setDarkState(saved === "dark");
+    } else {
+      const hour = new Date().getHours();
+      setDarkState(hour < 6 || hour >= 19);
+    }
+  }, []);
+
+  const setDark = (value: boolean) => {
+    setDarkState(value);
+    localStorage.setItem("bfc-theme", value ? "dark" : "light");
+  };
 
   useEffect(() => {
     const onScroll = () => setIsScrolled(window.scrollY > 8);
