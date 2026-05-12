@@ -24,6 +24,12 @@
 .DS_Store
 *.pem
 
+# claude agent
+.claude/
+
+# project notes
+B-FITNESS-CLUB-PROJECT-INSTRUCTIONS.md
+
 # debug
 npm-debug.log*
 yarn-debug.log*
