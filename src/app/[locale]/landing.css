@@ -74,6 +74,10 @@ button { font-family: inherit; cursor: pointer; }
   font-family: 'Bebas Neue'; font-size: 22px; line-height: 1;
   box-shadow: 0 6px 20px -6px rgba(255,90,31,.7);
 }
+.landing-root .brand-logo {
+  width: 34px; height: 34px; border-radius: 9px; object-fit: cover;
+  box-shadow: 0 6px 20px -6px rgba(255,90,31,.5);
+}
 .landing-root .brand-word { font-size: 14px; }
 .landing-root .brand-word em { color: var(--accent); font-style: normal; }
 .landing-root .nav-links { display: flex; gap: 28px; font-size: 14px; color: var(--mute); }

@@ -145,7 +145,7 @@ function Nav({
     <header className={`nav${isScrolled ? " scrolled" : ""}`}>
       <div className="nav-inner">
         <a href="#top" className="brand">
-          <div className="brand-mark">B</div>
+          <Image src="/logo.png" alt="B-Fitness Club" width={36} height={36} className="brand-logo" priority />
           <div className="brand-word">B-FITNESS <em>CLUB</em></div>
         </a>
         <nav className="nav-links">
@@ -469,7 +469,7 @@ function Footer({ locale }: { locale: string }) {
       <div className="foot-inner">
         <div>
           <a href="#top" className="brand" style={{ marginBottom: 20, display: "inline-flex" }}>
-            <div className="brand-mark">B</div>
+            <Image src="/logo.png" alt="B-Fitness Club" width={36} height={36} className="brand-logo" />
             <div className="brand-word">B-FITNESS <em>CLUB</em></div>
           </a>
           <p className="tagline">
