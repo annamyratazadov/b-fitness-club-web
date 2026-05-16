@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
   Package,
   LogOut,
-  Dumbbell,
   MessageSquare,
   Menu,
   X,
@@ -46,9 +46,7 @@ export default function AdminSidebar({ locale, adminName }: Props) {
         {/* Logo */}
         <div className="p-6 border-b border-gray-700">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-              <Dumbbell className="w-5 h-5 text-white" />
-            </div>
+            <Image src="/logo.png" alt="B-Fitness Club" width={36} height={36} className="rounded-lg" />
             <div>
               <div className="font-bold text-sm">B-Fitness Club</div>
               <div className="text-xs text-gray-400">Admin Panel</div>
@@ -111,9 +109,7 @@ export default function AdminSidebar({ locale, adminName }: Props) {
         </button>
 
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center">
-            <Dumbbell className="w-3.5 h-3.5 text-white" />
-          </div>
+          <Image src="/logo.png" alt="B-Fitness Club" width={28} height={28} className="rounded" />
           <span className="text-white font-bold text-sm">B-Fitness Club</span>
         </div>
 
@@ -139,9 +135,7 @@ export default function AdminSidebar({ locale, adminName }: Props) {
         {/* Drawer header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-700">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center">
-              <Dumbbell className="w-3.5 h-3.5 text-white" />
-            </div>
+            <Image src="/logo.png" alt="B-Fitness Club" width={28} height={28} className="rounded" />
             <span className="font-bold text-sm">B-Fitness Club</span>
           </div>
           <button

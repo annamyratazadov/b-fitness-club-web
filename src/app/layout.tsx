@@ -11,6 +11,11 @@ const geistSans = Geist({
 export const metadata: Metadata = {
   title: "B-Fitness Club Kavacık",
   description: "Kavacık'ta spor yapmanın en iyi adresi - B-Fitness Club Spor Salonu",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

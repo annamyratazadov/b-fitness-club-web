@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dumbbell, AlertCircle, Loader2, ShieldCheck, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
+import { AlertCircle, Loader2, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { adminLogin } from "@/lib/actions/auth";
 
 export default function AdminLoginPage() {
@@ -33,8 +34,15 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-700 rounded-2xl mb-4 border border-gray-600">
-            <Dumbbell className="w-9 h-9 text-orange-400" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <Image
+              src="/logo.png"
+              alt="B-Fitness Club"
+              width={80}
+              height={80}
+              className="rounded-2xl"
+              priority
+            />
           </div>
           <h1 className="text-2xl font-bold text-white">B-Fitness Club</h1>
           <div className="inline-flex items-center gap-1.5 mt-2 bg-orange-500/10 border border-orange-500/30 rounded-full px-3 py-1">
