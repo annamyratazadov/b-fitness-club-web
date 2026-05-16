@@ -28,13 +28,13 @@ export async function createClient() {
 }
 
 /**
- * Cookie-free client for public/anonymous reads (e.g. landing page prices).
- * Does not rely on cookies() — safe to call from any server context.
+ * Cookie-free client for public reads (e.g. landing page prices).
+ * Uses service role to bypass RLS on public tables — server-only, never exposed to browser.
  */
 export function createPublicClient() {
   return createSupabaseClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 }
 
