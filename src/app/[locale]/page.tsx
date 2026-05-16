@@ -1,5 +1,8 @@
-import { getPackages } from "@/lib/services/packages";
+import { getPublicPackages } from "@/lib/services/packages";
 import LandingClient from "./LandingClient";
+
+// Always render fresh — prevents stale price data from being cached
+export const dynamic = "force-dynamic";
 
 export type PriceMap = {
   student: { 30: number | null; 90: number | null; 180: number | null };
@@ -19,7 +22,7 @@ export default async function LandingPage({
   };
 
   try {
-    const packages = await getPackages(true);
+    const packages = await getPublicPackages();
     for (const pkg of packages) {
       const type = pkg.package_type as "student" | "normal";
       const days = pkg.duration_days as 30 | 90 | 180;
@@ -30,8 +33,9 @@ export default async function LandingPage({
         priceMap[type][days] = pkg.price;
       }
     }
-  } catch {
-    // Fall back to null prices — LandingClient shows dashes
+  } catch (err) {
+    console.error("[LandingPage] Failed to fetch package prices:", err);
+    // Prices will show as "—" — acceptable fallback
   }
 
   return <LandingClient locale={locale} priceMap={priceMap} />;
