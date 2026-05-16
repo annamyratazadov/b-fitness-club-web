@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { memberPinToPassword } from "@/lib/utils/member-auth";
 
 function phoneToEmail(phone: string): string {
   const normalized = phone.replace(/[\s\-\(\)]/g, "");
@@ -58,11 +59,11 @@ export async function memberLogin(formData: FormData) {
 
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
-    password,
+    password: memberPinToPassword(password),
   });
 
   if (error || !data.user) {
-    return { error: "Giriş başarısız. Telefon numarası veya şifrenizi kontrol edin." };
+    return { error: "Giriş başarısız. Telefon numarası veya PIN kodunuzu kontrol edin." };
   }
 
   const { data: profile } = await supabase

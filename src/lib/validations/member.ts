@@ -17,7 +17,7 @@ const profileBase = z.object({
 // Membership + login fields shared by both new/existing modes
 const membershipBase = z.object({
   package_id: z.string().uuid("Geçerli bir paket seçiniz"),
-  password: z.string().min(6, "Şifre en az 6 karakter olmalıdır"),
+  password: z.string().min(4, "PIN en az 4 karakter olmalıdır"),
   payment_amount: z
     .preprocess(
       (v) => (typeof v === "string" ? parseFloat(v) : v),

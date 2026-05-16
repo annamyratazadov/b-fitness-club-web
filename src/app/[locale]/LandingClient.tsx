@@ -513,6 +513,12 @@ function Footer({ locale }: { locale: string }) {
           <a href="#">Gizlilik</a>
           <a href="#">KVKK</a>
           <a href="#">Üyelik Koşulları</a>
+          <Link
+            href={`/${locale}/admin-login`}
+            className="opacity-30 hover:opacity-60 transition-opacity text-xs"
+          >
+            Admin Girişi
+          </Link>
         </div>
       </div>
     </footer>

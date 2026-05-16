@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { memberPinToPassword } from "@/lib/utils/member-auth";
 
 function phoneToEmail(phone: string): string {
   return `${phone.replace(/[\s\-\(\)]/g, "")}@bfitness.local`;
@@ -70,7 +71,7 @@ export async function createMember(formData: FormData) {
   // Create auth user with service role
   const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
     email: phoneToEmail(phone),
-    password,
+    password: memberPinToPassword(password),
     email_confirm: true,
   });
 
