@@ -59,7 +59,7 @@ function WhatsAppIcon({ size = 26 }: { size?: number }) {
 const FEATURES = [
   { n: "01", icon: Dumbbell, t: "Modern Ekipman", d: "Technogym, Life Fitness ve Hammer Strength ekipmanları. Her kas grubu için özel istasyonlar." },
   { n: "02", icon: Heart,    t: "Sıcak Topluluk",   d: "Mahallenin spor kulübü. Yeni başlayana da ileri seviyeye de kapıları açık, samimi bir ortam." },
-  { n: "03", icon: Calendar, t: "Esnek Üyelik",    d: "Öğrenci indirimleri, 1-3-6 ay seçenekleri, dondurma hakları. İhtiyacınıza uygun paket." },
+  { n: "03", icon: Calendar, t: "Esnek Üyelik",    d: "Öğrenci indirimleri, 1-3-6 ay seçenekleri. İhtiyacınıza uygun paket." },
   { n: "04", icon: Sparkles, t: "Hijyenik Ortam",  d: "Günde 3 kez dezenfekte, havalandırma sistemi, kişisel temizlik alanları. Güvenli spor ortamı." },
 ];
 
@@ -101,11 +101,11 @@ const PKG_DEFS: PkgDef[] = [
   },
   {
     dur: "3 Ay", name: "Momentum", days: 90, popular: true,
-    features: ["Sınırsız salon kullanımı", "2 adet kişisel antrenman", "Beslenme danışmanlığı", "Dondurma: 7 gün", "Grup dersleri dahil"],
+    features: ["Sınırsız salon kullanımı", "2 adet kişisel antrenman", "Beslenme danışmanlığı", "Grup dersleri dahil"],
   },
   {
     dur: "6 Ay", name: "Dönüşüm", days: 180, popular: false,
-    features: ["Sınırsız salon kullanımı", "4 adet kişisel antrenman", "Beslenme & program takibi", "Dondurma: 14 gün", "Grup dersleri + misafir hakkı"],
+    features: ["Sınırsız salon kullanımı", "4 adet kişisel antrenman", "Beslenme & program takibi", "Grup dersleri + misafir hakkı"],
   },
 ];
 
@@ -440,7 +440,7 @@ function CtaBanner() {
           <h2>3 Arkadaş Getir, 1 Ay Bedava!</h2>
           <p>Arkadaşlarını da sağlıklı yaşama davet et — sen kazan, onlar kazan. Hemen başla!</p>
           <div className="ctas">
-            <a className="btn btn-primary" href="#paketler">Deneme Dersi Al <ArrowRight size={16} /></a>
+            <a className="btn btn-primary" href="#paketler">Hemen Üye Ol <ArrowRight size={16} /></a>
             <a className="btn btn-ghost" href="tel:+902166932165">0216 693 21 65</a>
           </div>
         </div>
@@ -454,7 +454,7 @@ function CtaBanner() {
             </text>
           </svg>
           <div className="center">
-            <div><b>FREE</b><span>İlk Ders</span></div>
+            <div><b>3+1</b><span>Kampanya</span></div>
           </div>
         </div>
       </div>
@@ -494,7 +494,6 @@ function Footer({ locale }: { locale: string }) {
           <ul>
             <li><Link href={`/${locale}/login`}>Üye Girişi</Link></li>
             <li><a href="#paketler">Paketleri İncele</a></li>
-            <li><a href="#paketler">Deneme Dersi</a></li>
             <li><a href="#paketler">Öğrenci İndirimi</a></li>
           </ul>
         </div>
