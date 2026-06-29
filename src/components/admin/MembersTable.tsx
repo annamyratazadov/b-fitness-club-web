@@ -16,6 +16,7 @@ type Member = any & {
   created_at: string;
   active_membership: Record<string, unknown> | null;
   days_remaining: number | null;
+  membership_state: "active" | "expired" | "none";
 };
 
 interface Props {
@@ -64,17 +65,8 @@ export default function MembersTable({ members, locale, page, totalPages }: Prop
           </thead>
           <tbody className="divide-y divide-gray-50">
             {members.map((member) => {
+              const state = member.membership_state;
               const days = member.days_remaining;
-              const daysColor =
-                days === null
-                  ? "text-gray-400"
-                  : days === 0
-                  ? "text-red-600 font-bold"
-                  : days <= 3
-                  ? "text-red-500 font-semibold"
-                  : days <= 7
-                  ? "text-orange-500 font-semibold"
-                  : "text-green-600";
 
               // Detect retroactively added members (start_date significantly before created_at)
               const startStr = member.active_membership?.start_date as string | undefined;
@@ -110,23 +102,52 @@ export default function MembersTable({ members, locale, page, totalPages }: Prop
                       <span className="text-gray-400 italic">Paket yok</span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td
+                    className={cn(
+                      "px-4 py-3",
+                      state === "expired" ? "text-red-600 font-medium" : "text-gray-600"
+                    )}
+                  >
                     {member.active_membership?.end_date
                       ? new Date(member.active_membership.end_date).toLocaleDateString("tr-TR")
                       : "-"}
                   </td>
-                  <td className={cn("px-4 py-3", daysColor)}>
-                    {days === null ? "-" : days === 0 ? "Doldu" : `${days} gün`}
+                  <td className="px-4 py-3">
+                    {state === "none" ? (
+                      <span className="text-gray-400">—</span>
+                    ) : state === "expired" ? (
+                      <span className="text-red-600 font-bold">Süresi doldu</span>
+                    ) : days === 0 ? (
+                      <span className="text-orange-600 font-bold">Son gün</span>
+                    ) : (
+                      <span
+                        className={cn(
+                          days <= 3
+                            ? "text-red-500 font-semibold"
+                            : days <= 7
+                            ? "text-orange-500 font-semibold"
+                            : "text-green-600"
+                        )}
+                      >
+                        {days} gün
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <Badge
                       className={
-                        member.status === "active"
+                        state === "active"
                           ? "bg-green-100 text-green-700"
+                          : state === "expired"
+                          ? "bg-red-100 text-red-700"
                           : "bg-gray-100 text-gray-600"
                       }
                     >
-                      {member.status === "active" ? "Aktif" : "Pasif"}
+                      {state === "active"
+                        ? "Aktif"
+                        : state === "expired"
+                        ? "Süresi Doldu"
+                        : "Üyelik Yok"}
                     </Badge>
                   </td>
                   <td className="px-4 py-3 text-right">

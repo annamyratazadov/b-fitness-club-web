@@ -61,6 +61,24 @@
     "daysRemaining": "{days} gün kaldı",
     "expired": "Süresi Doldu"
   },
+  "reports": {
+    "title": "Gelir Raporu",
+    "subtitle": "Üyelik başlangıç tarihine göre aylık gelir ve üye dökümü",
+    "prevYear": "Önceki yıl",
+    "nextYear": "Sonraki yıl",
+    "totalRevenue": "Toplam Gelir",
+    "newMembers": "Yeni Üye",
+    "renewals": "Yenileme",
+    "totalEntries": "Toplam Kayıt",
+    "member": "Üye",
+    "type": "Tür",
+    "package": "Paket",
+    "startDate": "Başlangıç",
+    "amount": "Tutar",
+    "newBadge": "Yeni Üye",
+    "renewalBadge": "Kayıt Yenileme",
+    "emptyMonth": "Bu ay başlayan üyelik yok."
+  },
   "members": {
     "title": "Üye Yönetimi",
     "addNew": "Yeni Üye Ekle",

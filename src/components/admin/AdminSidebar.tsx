@@ -10,6 +10,7 @@ import {
   Package,
   LogOut,
   MessageSquare,
+  BarChart3,
   Menu,
   X,
 } from "lucide-react";
@@ -36,6 +37,7 @@ export default function AdminSidebar({ locale, adminName }: Props) {
     { href: `/${locale}/admin/dashboard`,     label: "Dashboard",    icon: LayoutDashboard },
     { href: `/${locale}/admin/members`,       label: "Üyeler",       icon: Users },
     { href: `/${locale}/admin/packages`,      label: "Paketler",     icon: Package },
+    { href: `/${locale}/admin/reports`,       label: "Gelir Raporu", icon: BarChart3 },
     { href: `/${locale}/admin/notifications`, label: "Bildirimler",  icon: MessageSquare },
   ];
 

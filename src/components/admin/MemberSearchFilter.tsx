@@ -68,8 +68,8 @@ export default function MemberSearchFilter() {
         className="px-3 py-2 border rounded-md text-sm text-gray-600 bg-white"
       >
         <option value="">Tüm Durumlar</option>
-        <option value="active">Aktif</option>
-        <option value="passive">Pasif</option>
+        <option value="active">Aktif Üyelik</option>
+        <option value="passive">Süresi Dolmuş / Yok</option>
       </select>
 
       <select

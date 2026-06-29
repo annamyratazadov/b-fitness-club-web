@@ -22,6 +22,8 @@ export default async function MemberDetailPage({
 
   if (!member) notFound();
 
+  const today = new Date().toISOString().split("T")[0];
+  const state = member.membership_state as "active" | "expired" | "none";
   const activeMembership = member.active_membership;
   const daysRemaining = member.days_remaining;
   const totalDays = (activeMembership?.membership_packages as { duration_days?: number } | null)?.duration_days ?? 1;
@@ -65,8 +67,16 @@ export default async function MemberDetailPage({
                   <User className="w-5 h-5 text-orange-500" />
                   {member.first_name} {member.last_name}
                 </CardTitle>
-                <Badge className={member.status === "active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"}>
-                  {member.status === "active" ? "Aktif" : "Pasif"}
+                <Badge
+                  className={
+                    state === "active"
+                      ? "bg-green-100 text-green-700"
+                      : state === "expired"
+                      ? "bg-red-100 text-red-700"
+                      : "bg-gray-100 text-gray-600"
+                  }
+                >
+                  {state === "active" ? "Aktif" : state === "expired" ? "Süresi Doldu" : "Üyelik Yok"}
                 </Badge>
               </div>
             </CardHeader>
@@ -87,31 +97,46 @@ export default async function MemberDetailPage({
 
         {/* Membership Status */}
         <div>
-          <Card className={`border-2 ${daysRemaining !== null && daysRemaining <= 3 ? "border-red-200 bg-red-50/30" : "border-orange-100"}`}>
+          <Card className={`border-2 ${
+            state === "expired" || (state === "active" && (daysRemaining ?? 0) <= 3)
+              ? "border-red-200 bg-red-50/30"
+              : "border-orange-100"
+          }`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-semibold text-gray-600">Aktif Üyelik</CardTitle>
+              <CardTitle className="text-sm font-semibold text-gray-600">Üyelik Durumu</CardTitle>
             </CardHeader>
             <CardContent>
-              {!activeMembership ? (
+              {state === "none" ? (
                 <div className="text-center py-6">
                   <p className="text-gray-400 text-sm font-medium">Aktif üyelik yok</p>
                   <p className="text-gray-300 text-xs mt-1">Üyelik uzatmak için yukarıdaki butonu kullanın</p>
                 </div>
               ) : (
                 <div className="text-center">
-                  <div className={`text-5xl font-black mb-1 ${
-                    (daysRemaining ?? 0) <= 3 ? "text-red-500" : (daysRemaining ?? 0) <= 7 ? "text-orange-500" : "text-green-600"
-                  }`}>
-                    {daysRemaining}
-                  </div>
-                  <div className="text-gray-500 text-sm mb-3">gün kaldı</div>
+                  {state === "active" ? (
+                    <>
+                      <div className={`text-5xl font-black mb-1 ${
+                        (daysRemaining ?? 0) <= 3 ? "text-red-500" : (daysRemaining ?? 0) <= 7 ? "text-orange-500" : "text-green-600"
+                      }`}>
+                        {daysRemaining}
+                      </div>
+                      <div className="text-gray-500 text-sm mb-3">gün kaldı</div>
 
-                  <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
-                    <div
-                      className={`h-2 rounded-full ${progressPercent > 50 ? "bg-green-500" : progressPercent > 20 ? "bg-orange-500" : "bg-red-500"}`}
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
+                        <div
+                          className={`h-2 rounded-full ${progressPercent > 50 ? "bg-green-500" : progressPercent > 20 ? "bg-orange-500" : "bg-red-500"}`}
+                          style={{ width: `${progressPercent}%` }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="mb-4">
+                      <div className="text-2xl font-black text-red-600 mb-1">Süresi doldu</div>
+                      <div className="text-gray-500 text-sm">
+                        {Math.abs(daysRemaining ?? 0)} gün önce sona erdi
+                      </div>
+                    </div>
+                  )}
 
                   <div className="text-left space-y-2 text-sm border-t pt-3">
                     <div className="flex justify-between">
@@ -124,7 +149,7 @@ export default async function MemberDetailPage({
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Bitiş</span>
-                      <span className="font-semibold">{new Date(activeMembership.end_date).toLocaleDateString("tr-TR")}</span>
+                      <span className={`font-semibold ${state === "expired" ? "text-red-600" : ""}`}>{new Date(activeMembership.end_date).toLocaleDateString("tr-TR")}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-500">Ödeme</span>
@@ -164,8 +189,10 @@ export default async function MemberDetailPage({
                 </thead>
                 <tbody className="divide-y">
                   {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-                  {member.memberships.map((m: any) => (
-                    <tr key={m.id} className={m.is_active ? "bg-green-50/40" : "hover:bg-gray-50/50"}>
+                  {member.memberships.map((m: any) => {
+                    const valid = m.end_date >= today;
+                    return (
+                    <tr key={m.id} className={valid ? "bg-green-50/40" : "hover:bg-gray-50/50"}>
                       <td className="px-3 py-2 text-gray-500 text-xs">
                         {new Date(m.created_at).toLocaleDateString("tr-TR")}
                       </td>
@@ -176,14 +203,15 @@ export default async function MemberDetailPage({
                       </td>
                       <td className="px-3 py-2 font-medium">₺{m.payment_amount?.toLocaleString("tr-TR")}</td>
                       <td className="px-3 py-2">
-                        {m.is_active ? (
+                        {valid ? (
                           <Badge className="bg-green-100 text-green-700 text-xs">Aktif</Badge>
                         ) : (
                           <Badge className="bg-gray-100 text-gray-500 text-xs">Geçmiş</Badge>
                         )}
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

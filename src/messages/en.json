@@ -61,6 +61,24 @@
     "daysRemaining": "{days} days left",
     "expired": "Expired"
   },
+  "reports": {
+    "title": "Revenue Report",
+    "subtitle": "Monthly revenue and member breakdown by membership start date",
+    "prevYear": "Previous year",
+    "nextYear": "Next year",
+    "totalRevenue": "Total Revenue",
+    "newMembers": "New Members",
+    "renewals": "Renewals",
+    "totalEntries": "Total Records",
+    "member": "Member",
+    "type": "Type",
+    "package": "Package",
+    "startDate": "Start Date",
+    "amount": "Amount",
+    "newBadge": "New",
+    "renewalBadge": "Renewal",
+    "emptyMonth": "No memberships started this month."
+  },
   "members": {
     "title": "Member Management",
     "addNew": "Add New Member",

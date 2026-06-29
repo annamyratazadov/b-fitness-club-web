@@ -4,6 +4,7 @@ export async function getDashboardStats() {
   const supabase = await createClient();
 
   const today = new Date();
+  const todayStr = today.toISOString().split("T")[0];
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1)
     .toISOString()
     .split("T")[0];
@@ -13,29 +14,16 @@ export async function getDashboardStats() {
 
   const [
     { count: total },
-    { count: active },
-    { count: passive },
     { count: newThisMonth },
     { count: expiringThisMonth },
     revenueResult,
     popularPackageResult,
+    activeMembersResult,
   ] = await Promise.all([
     supabase
       .from("profiles")
       .select("*", { count: "exact", head: true })
       .eq("role", "member"),
-
-    supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .eq("role", "member")
-      .eq("status", "active"),
-
-    supabase
-      .from("profiles")
-      .select("*", { count: "exact", head: true })
-      .eq("role", "member")
-      .eq("status", "passive"),
 
     supabase
       .from("profiles")
@@ -53,14 +41,24 @@ export async function getDashboardStats() {
     supabase
       .from("memberships")
       .select("payment_amount")
-      .gte("created_at", startOfMonth),
+      .gte("start_date", startOfMonth)
+      .lte("start_date", endOfMonth),
 
     supabase
       .from("memberships")
       .select("membership_packages(name)")
       .eq("is_active", true)
       .gte("created_at", startOfMonth),
+
+    // Members with a currently-valid membership (end_date >= today). "Active" /
+    // "passive" are derived from this, NOT the unused profiles.status field.
+    supabase.from("memberships").select("member_id").gte("end_date", todayStr),
   ]);
+
+  const activeMembers = new Set(
+    (activeMembersResult.data ?? []).map((r) => r.member_id)
+  ).size;
+  const passiveMembers = Math.max(0, (total ?? 0) - activeMembers);
 
   const monthlyRevenue =
     revenueResult.data?.reduce((sum, m) => sum + (m.payment_amount || 0), 0) ??
@@ -81,8 +79,8 @@ export async function getDashboardStats() {
 
   return {
     total_members: total ?? 0,
-    active_members: active ?? 0,
-    passive_members: passive ?? 0,
+    active_members: activeMembers,
+    passive_members: passiveMembers,
     new_members_this_month: newThisMonth ?? 0,
     expiring_this_month: expiringThisMonth ?? 0,
     monthly_revenue: monthlyRevenue,

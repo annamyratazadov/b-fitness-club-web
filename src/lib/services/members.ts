@@ -16,6 +16,7 @@ export async function getMembers({
   pageSize = 15,
 }: MembersFilter = {}) {
   const supabase = await createClient();
+  const today = new Date().toISOString().split("T")[0];
 
   // Get member IDs matching packageType filter first
   let filteredMemberIds: string[] | null = null;
@@ -27,6 +28,18 @@ export async function getMembers({
       .eq("membership_packages.package_type", packageType);
 
     filteredMemberIds = pkgMemberships?.map((m) => m.member_id) ?? [];
+  }
+
+  // Status filter means "membership validity": does the member currently have a
+  // non-expired membership (end_date >= today)? We derive this from dates rather
+  // than profiles.status (which the app never changes) or the stale is_active flag.
+  let validMemberIds: string[] | null = null;
+  if (status === "active" || status === "passive") {
+    const { data: validRows } = await supabase
+      .from("memberships")
+      .select("member_id")
+      .gte("end_date", today);
+    validMemberIds = Array.from(new Set((validRows ?? []).map((r) => r.member_id)));
   }
 
   let query = supabase
@@ -49,14 +62,21 @@ export async function getMembers({
       `first_name.ilike.%${search}%,last_name.ilike.%${search}%,phone.ilike.%${search}%`
     );
   }
-  if (status) {
-    query = query.eq("status", status);
-  }
   if (filteredMemberIds !== null) {
     if (filteredMemberIds.length === 0) {
       return { data: [], count: 0, totalPages: 0 };
     }
     query = query.in("id", filteredMemberIds);
+  }
+
+  if (status === "active") {
+    if (validMemberIds!.length === 0) {
+      return { data: [], count: 0, totalPages: 0 };
+    }
+    query = query.in("id", validMemberIds!);
+  } else if (status === "passive" && validMemberIds!.length > 0) {
+    // Everyone WITHOUT a currently-valid membership (expired or none).
+    query = query.not("id", "in", `(${validMemberIds!.join(",")})`);
   }
 
   const from = (page - 1) * pageSize;
@@ -66,21 +86,30 @@ export async function getMembers({
   const { data, count, error } = await query;
   if (error) throw error;
 
-  // Attach computed fields
-  const today = new Date().toISOString().split("T")[0];
+  // Attach computed fields. The member's CURRENT membership is the one with the
+  // latest end_date (covers renewals and expired memberships alike), and validity
+  // is derived from that date — NOT the is_active flag, which is never flipped
+  // when a membership lapses.
   const members = (data ?? []).map((m) => {
-    const activeMembership = m.memberships?.find((mb) => mb.is_active) ?? null;
-    const daysRemaining = activeMembership
-      ? Math.max(
-          0,
-          Math.ceil(
-            (new Date(activeMembership.end_date).getTime() -
-              new Date(today).getTime()) /
-              86400000
-          )
-        )
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const list: any[] = m.memberships ?? [];
+    const current = list.length
+      ? list.reduce((a, b) => (b.end_date > a.end_date ? b : a))
       : null;
-    return { ...m, active_membership: activeMembership, days_remaining: daysRemaining };
+    let membershipState: "active" | "expired" | "none" = "none";
+    let daysRemaining: number | null = null;
+    if (current) {
+      daysRemaining = Math.ceil(
+        (new Date(current.end_date).getTime() - new Date(today).getTime()) / 86400000
+      );
+      membershipState = current.end_date >= today ? "active" : "expired";
+    }
+    return {
+      ...m,
+      active_membership: current,
+      days_remaining: daysRemaining,
+      membership_state: membershipState,
+    };
   });
 
   return {
@@ -112,27 +141,31 @@ export async function getMemberDetail(id: string) {
   if (error || !data) return null;
 
   const today = new Date().toISOString().split("T")[0];
+  // Current membership = the one with the latest end_date; validity is by date,
+  // not the is_active flag (which is never flipped when a membership lapses).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const activeMembership = data.memberships?.find((m: any) => m.is_active) ?? null;
-  const daysRemaining = activeMembership
-    ? Math.max(
-        0,
-        Math.ceil(
-          (new Date(activeMembership.end_date).getTime() -
-            new Date(today).getTime()) /
-            86400000
-        )
-      )
+  const list: any[] = data.memberships ?? [];
+  const current = list.length
+    ? list.reduce((a, b) => (b.end_date > a.end_date ? b : a))
     : null;
+  let membershipState: "active" | "expired" | "none" = "none";
+  let daysRemaining: number | null = null;
+  if (current) {
+    daysRemaining = Math.ceil(
+      (new Date(current.end_date).getTime() - new Date(today).getTime()) / 86400000
+    );
+    membershipState = current.end_date >= today ? "active" : "expired";
+  }
 
-  const sortedMemberships = [...(data.memberships ?? [])].sort(
+  const sortedMemberships = [...list].sort(
     (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
   );
 
   return {
     ...data,
-    active_membership: activeMembership,
+    active_membership: current,
     days_remaining: daysRemaining,
+    membership_state: membershipState,
     memberships: sortedMemberships,
   };
 }
