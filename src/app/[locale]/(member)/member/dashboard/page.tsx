@@ -169,7 +169,7 @@ export default async function MemberDashboardPage({
             <ProfileRow
               icon={Calendar}
               label="Doğum Tarihi"
-              value={new Date(profile.birth_date).toLocaleDateString("tr-TR")}
+              value={profile.birth_date ? new Date(profile.birth_date).toLocaleDateString("tr-TR") : null}
             />
             <ProfileRow icon={MapPin} label="Doğum Yeri" value={profile.birth_place} />
             <ProfileRow icon={Briefcase} label="Meslek" value={profile.occupation} />
@@ -240,8 +240,9 @@ function ProfileRow({
 }: {
   icon: React.ElementType;
   label: string;
-  value: string;
+  value: string | null;
 }) {
+  const empty = value === null || value === "";
   return (
     <div className="flex items-start gap-3 py-2 border-b border-gray-50 last:border-0">
       <div className="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center shrink-0 mt-0.5">
@@ -249,7 +250,9 @@ function ProfileRow({
       </div>
       <div>
         <p className="text-xs text-gray-400">{label}</p>
-        <p className="text-sm font-medium text-gray-900 mt-0.5">{value}</p>
+        <p className={`text-sm font-medium mt-0.5 ${empty ? "text-gray-300" : "text-gray-900"}`}>
+          {empty ? "—" : value}
+        </p>
       </div>
     </div>
   );

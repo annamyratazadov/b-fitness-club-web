@@ -102,7 +102,9 @@ export default function MembersTable({ members, locale, page, totalPages }: Prop
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{member.phone}</td>
+                  <td className="px-4 py-3 text-gray-600">
+                    {member.phone || <span className="text-gray-300">—</span>}
+                  </td>
                   <td className="px-4 py-3 text-gray-600">
                     {member.active_membership?.membership_packages?.name ?? (
                       <span className="text-gray-400 italic">Paket yok</span>

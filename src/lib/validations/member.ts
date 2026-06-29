@@ -1,45 +1,63 @@
 import { z } from "zod";
 
-// Shared profile fields
+// Boş string'i undefined'a çevir (opsiyonel alanlar için)
+const optionalText = z.preprocess(
+  (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+  z.string().optional()
+);
+
+// Shared profile fields.
+// Zorunlu: ad, soyad. Diğerleri opsiyonel (defter kullanımına göre).
 const profileBase = z.object({
   first_name: z.string().min(2, "Ad en az 2 karakter olmalıdır"),
   last_name: z.string().min(2, "Soyad en az 2 karakter olmalıdır"),
-  phone: z
-    .string()
-    .min(10, "Telefon numarası en az 10 karakter olmalıdır")
-    .max(15, "Telefon numarası en fazla 15 karakter olmalıdır"),
-  birth_date: z.string().min(1, "Doğum tarihi zorunludur"),
-  birth_place: z.string().min(2, "Doğum yeri zorunludur"),
-  occupation: z.string().min(2, "Meslek zorunludur"),
-  address: z.string().min(10, "Adres en az 10 karakter olmalıdır"),
+  phone: optionalText,
+  birth_date: optionalText,
+  birth_place: optionalText,
+  occupation: optionalText,
+  address: optionalText,
 });
 
-// Membership + login fields shared by both new/existing modes
+// Membership + login fields shared by both new/existing modes.
+// Zorunlu: paket. PIN sadece telefon girildiyse gerekli (aşağıda refine ile).
 const membershipBase = z.object({
   package_id: z.string().uuid("Geçerli bir paket seçiniz"),
-  password: z.string().min(4, "PIN en az 4 karakter olmalıdır"),
+  password: optionalText,
   payment_amount: z
     .preprocess(
-      (v) => (typeof v === "string" ? parseFloat(v) : v),
-      z.number().min(0, "Ödeme tutarı 0 veya daha fazla olmalıdır")
+      (v) => (typeof v === "string" && v.trim() !== "" ? parseFloat(v) : undefined),
+      z.number().min(0, "Ödeme tutarı 0 veya daha fazla olmalıdır").optional()
     ),
 });
 
+// Telefon girildiyse PIN de zorunlu olmalı
+const requirePinWithPhone = (data: { phone?: string; password?: string }) =>
+  !data.phone || !!data.password;
+const pinError = {
+  message: "Telefon girildiğinde giriş PIN'i de zorunludur",
+  path: ["password"],
+};
+
 // Yeni Üye Ekle — başlangıç bugün, server'da hesaplanır
-export const newMemberSchema = profileBase.merge(membershipBase);
+export const newMemberSchema = profileBase
+  .merge(membershipBase)
+  .refine(requirePinWithPhone, pinError);
 
 // Mevcut Üye Ekle — geçmiş başlangıç tarihi zorunlu
-export const existingMemberSchema = profileBase.merge(membershipBase).extend({
-  start_date: z
-    .string()
-    .min(1, "Başlangıç tarihi zorunludur")
-    .refine((s) => {
-      const d = new Date(s);
-      const today = new Date();
-      today.setHours(23, 59, 59, 999);
-      return d <= today;
-    }, "Başlangıç tarihi bugünden sonra olamaz"),
-});
+export const existingMemberSchema = profileBase
+  .merge(membershipBase)
+  .extend({
+    start_date: z
+      .string()
+      .min(1, "Başlangıç tarihi zorunludur")
+      .refine((s) => {
+        const d = new Date(s);
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        return d <= today;
+      }, "Başlangıç tarihi bugünden sonra olamaz"),
+  })
+  .refine(requirePinWithPhone, pinError);
 
 // Update — only profile fields
 export const memberUpdateSchema = profileBase;

@@ -15,11 +15,11 @@ export interface Profile {
   id: string;
   first_name: string;
   last_name: string;
-  phone: string;
-  birth_date: string;
-  birth_place: string;
-  occupation: string;
-  address: string;
+  phone: string | null;
+  birth_date: string | null;
+  birth_place: string | null;
+  occupation: string | null;
+  address: string | null;
   status: MemberStatus;
   language: Language;
   created_at: string;

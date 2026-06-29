@@ -13,7 +13,7 @@ export default async function ExistingMemberPage({
   const packages = await getPackages(true);
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-5xl">
       <Link href={`/${locale}/admin/members`}>
         <Button variant="ghost" size="sm" className="mb-3">
           <ArrowLeft className="w-4 h-4 mr-2" />

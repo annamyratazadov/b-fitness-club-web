@@ -19,13 +19,9 @@ export default async function LocaleLayout({ children, params }: Props) {
   const messages = await getMessages();
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body>
-        <NextIntlClientProvider messages={messages}>
-          {children}
-          <Toaster richColors position="top-right" />
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider messages={messages}>
+      {children}
+      <Toaster richColors position="top-right" />
+    </NextIntlClientProvider>
   );
 }

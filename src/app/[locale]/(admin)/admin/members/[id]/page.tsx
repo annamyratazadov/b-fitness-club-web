@@ -73,7 +73,7 @@ export default async function MemberDetailPage({
             <CardContent>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <InfoRow icon={Phone} label="Telefon" value={member.phone} />
-                <InfoRow icon={Calendar} label="Doğum Tarihi" value={new Date(member.birth_date).toLocaleDateString("tr-TR")} />
+                <InfoRow icon={Calendar} label="Doğum Tarihi" value={member.birth_date ? new Date(member.birth_date).toLocaleDateString("tr-TR") : null} />
                 <InfoRow icon={MapPin} label="Doğum Yeri" value={member.birth_place} />
                 <InfoRow icon={Briefcase} label="Meslek" value={member.occupation} />
                 <InfoRow icon={Calendar} label="Kayıt Tarihi" value={new Date(member.created_at).toLocaleDateString("tr-TR")} />
@@ -194,13 +194,16 @@ export default async function MemberDetailPage({
   );
 }
 
-function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string }) {
+function InfoRow({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value: string | null }) {
+  const empty = value === null || value === "";
   return (
     <div className="flex items-start gap-3">
       <Icon className="w-4 h-4 text-gray-400 mt-0.5 shrink-0" />
       <div>
         <p className="text-xs text-gray-500">{label}</p>
-        <p className="text-sm font-medium text-gray-900">{value}</p>
+        <p className={`text-sm font-medium ${empty ? "text-gray-300" : "text-gray-900"}`}>
+          {empty ? "—" : value}
+        </p>
       </div>
     </div>
   );

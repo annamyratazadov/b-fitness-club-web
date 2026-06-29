@@ -25,11 +25,13 @@ CREATE TABLE profiles (
   id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
-  phone TEXT UNIQUE NOT NULL,
-  birth_date DATE NOT NULL,
-  birth_place TEXT NOT NULL,
-  occupation TEXT NOT NULL,
-  address TEXT NOT NULL,
+  -- phone optional: members can be tracked without app login.
+  -- UNIQUE still applies, but Postgres allows multiple NULLs.
+  phone TEXT UNIQUE,
+  birth_date DATE,
+  birth_place TEXT,
+  occupation TEXT,
+  address TEXT,
   role user_role NOT NULL DEFAULT 'member',
   status member_status NOT NULL DEFAULT 'active',
   language language_type NOT NULL DEFAULT 'tr',

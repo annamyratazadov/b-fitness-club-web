@@ -99,7 +99,8 @@ export async function GET(request: NextRequest) {
     const phone = profile?.phone;
 
     if (!phone) {
-      results.push({ member_id: membership.member_id, status: "failed", error: "Phone missing" });
+      // Telefonsuz üye (sadece takip amaçlı) — WhatsApp gönderilemez, sessizce atla.
+      console.log(`Skipping ${membership.member_id} — no phone (tracking-only member)`);
       continue;
     }
 

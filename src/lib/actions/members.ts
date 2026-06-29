@@ -9,11 +9,17 @@ function phoneToEmail(phone: string): string {
   return `${phone.replace(/[\s\-\(\)]/g, "")}@bfitness.local`;
 }
 
+// Empty/whitespace string → null (for optional profile columns)
+function nullIfEmpty(v: FormDataEntryValue | null): string | null {
+  const s = (v as string | null)?.trim();
+  return s ? s : null;
+}
+
 export async function createMember(formData: FormData) {
   const locale = (formData.get("locale") as string) || "tr";
   const mode = ((formData.get("mode") as string) || "new") as "new" | "existing";
-  const phone = (formData.get("phone") as string).trim();
-  const password = formData.get("password") as string;
+  const phone = nullIfEmpty(formData.get("phone"));
+  const password = nullIfEmpty(formData.get("password"));
   const packageId = formData.get("package_id") as string;
   const today = new Date().toISOString().split("T")[0];
 
@@ -31,18 +37,25 @@ export async function createMember(formData: FormData) {
     startDate = provided;
   }
 
+  // Phone is optional. If provided, a PIN is required so the member can log in.
+  if (phone && !password) {
+    return { error: "Telefon girildiğinde giriş PIN'i de zorunludur." };
+  }
+
   const supabase = await createClient();
   const adminSupabase = await createAdminClient();
 
-  // Check phone uniqueness
-  const { data: existing } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("phone", phone)
-    .single();
+  // Check phone uniqueness (only when a phone was provided)
+  if (phone) {
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("phone", phone)
+      .single();
 
-  if (existing) {
-    return { error: "Bu telefon numarası zaten kayıtlı." };
+    if (existing) {
+      return { error: "Bu telefon numarası zaten kayıtlı." };
+    }
   }
 
   // Fetch package to calculate end_date
@@ -68,10 +81,18 @@ export async function createMember(formData: FormData) {
   const paymentAmount =
     paymentRaw && !isNaN(parseFloat(paymentRaw)) ? parseFloat(paymentRaw) : pkg.price;
 
+  // Every member needs an auth user (profiles.id → auth.users.id).
+  // With a phone → real login credentials (phone + PIN).
+  // Without a phone → synthetic, non-guessable credentials; the member exists
+  // for tracking only and cannot log in until a phone + PIN is added.
+  const authEmail = phone ? phoneToEmail(phone) : `member-${crypto.randomUUID()}@bfitness.local`;
+  const authPassword =
+    phone && password ? memberPinToPassword(password) : crypto.randomUUID();
+
   // Create auth user with service role
   const { data: authData, error: authError } = await adminSupabase.auth.admin.createUser({
-    email: phoneToEmail(phone),
-    password: memberPinToPassword(password),
+    email: authEmail,
+    password: authPassword,
     email_confirm: true,
   });
 
@@ -84,13 +105,13 @@ export async function createMember(formData: FormData) {
   // Insert profile
   const { error: profileError } = await supabase.from("profiles").insert({
     id: userId,
-    first_name: formData.get("first_name") as string,
-    last_name: formData.get("last_name") as string,
+    first_name: (formData.get("first_name") as string).trim(),
+    last_name: (formData.get("last_name") as string).trim(),
     phone,
-    birth_date: formData.get("birth_date") as string,
-    birth_place: formData.get("birth_place") as string,
-    occupation: formData.get("occupation") as string,
-    address: formData.get("address") as string,
+    birth_date: nullIfEmpty(formData.get("birth_date")),
+    birth_place: nullIfEmpty(formData.get("birth_place")),
+    occupation: nullIfEmpty(formData.get("occupation")),
+    address: nullIfEmpty(formData.get("address")),
     role: "member",
     status: "active",
     language: "tr",
@@ -126,30 +147,32 @@ export async function updateMember(id: string, formData: FormData) {
   const locale = (formData.get("locale") as string) || "tr";
   const supabase = await createClient();
 
-  const phone = (formData.get("phone") as string).trim();
+  const phone = nullIfEmpty(formData.get("phone"));
 
-  // Check phone uniqueness (exclude current member)
-  const { data: existing } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("phone", phone)
-    .neq("id", id)
-    .single();
+  // Check phone uniqueness (only when provided; exclude current member)
+  if (phone) {
+    const { data: existing } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("phone", phone)
+      .neq("id", id)
+      .single();
 
-  if (existing) {
-    return { error: "Bu telefon numarası başka bir üye tarafından kullanılıyor." };
+    if (existing) {
+      return { error: "Bu telefon numarası başka bir üye tarafından kullanılıyor." };
+    }
   }
 
   const { error } = await supabase
     .from("profiles")
     .update({
-      first_name: formData.get("first_name") as string,
-      last_name: formData.get("last_name") as string,
+      first_name: (formData.get("first_name") as string).trim(),
+      last_name: (formData.get("last_name") as string).trim(),
       phone,
-      birth_date: formData.get("birth_date") as string,
-      birth_place: formData.get("birth_place") as string,
-      occupation: formData.get("occupation") as string,
-      address: formData.get("address") as string,
+      birth_date: nullIfEmpty(formData.get("birth_date")),
+      birth_place: nullIfEmpty(formData.get("birth_place")),
+      occupation: nullIfEmpty(formData.get("occupation")),
+      address: nullIfEmpty(formData.get("address")),
     })
     .eq("id", id);
 
