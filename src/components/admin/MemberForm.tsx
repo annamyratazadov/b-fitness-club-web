@@ -281,14 +281,6 @@ export default function MemberForm({ packages, locale, member, mode: modeProp }:
       }
     }
 
-    const phone = ((formData.get("phone") as string) || "").trim();
-    const pin = ((formData.get("password") as string) || "").trim();
-    if (phone && !pin) {
-      setShowOptional(true);
-      setError("Telefon girildiğinde giriş PIN'i de zorunludur.");
-      return;
-    }
-
     startTransition(async () => {
       const result = isEdit
         ? await updateMember(member!.id, formData)
@@ -383,7 +375,7 @@ export default function MemberForm({ packages, locale, member, mode: modeProp }:
             {showPin ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
           </button>
         </div>
-        <p className="text-xs text-gray-400 mt-1">Sadece telefon girildiyse gerekli.</p>
+        <p className="text-xs text-gray-400 mt-1">Opsiyonel — sonradan da eklenebilir.</p>
       </div>
     </div>
   );

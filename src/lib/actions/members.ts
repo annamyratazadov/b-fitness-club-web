@@ -37,10 +37,8 @@ export async function createMember(formData: FormData) {
     startDate = provided;
   }
 
-  // Phone is optional. If provided, a PIN is required so the member can log in.
-  if (phone && !password) {
-    return { error: "Telefon girildiğinde giriş PIN'i de zorunludur." };
-  }
+  // Phone and PIN are both optional. A PIN may be added later so the member
+  // can log in; until then a synthetic credential is used (see below).
 
   const supabase = await createClient();
   const adminSupabase = await createAdminClient();

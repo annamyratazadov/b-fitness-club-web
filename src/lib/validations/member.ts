@@ -19,7 +19,7 @@ const profileBase = z.object({
 });
 
 // Membership + login fields shared by both new/existing modes.
-// Zorunlu: paket. PIN sadece telefon girildiyse gerekli (aşağıda refine ile).
+// Zorunlu: paket. PIN her zaman opsiyonel (giriş özelliği sonraki aşamada).
 const membershipBase = z.object({
   package_id: z.string().uuid("Geçerli bir paket seçiniz"),
   password: optionalText,
@@ -30,34 +30,21 @@ const membershipBase = z.object({
     ),
 });
 
-// Telefon girildiyse PIN de zorunlu olmalı
-const requirePinWithPhone = (data: { phone?: string; password?: string }) =>
-  !data.phone || !!data.password;
-const pinError = {
-  message: "Telefon girildiğinde giriş PIN'i de zorunludur",
-  path: ["password"],
-};
-
 // Yeni Üye Ekle — başlangıç bugün, server'da hesaplanır
-export const newMemberSchema = profileBase
-  .merge(membershipBase)
-  .refine(requirePinWithPhone, pinError);
+export const newMemberSchema = profileBase.merge(membershipBase);
 
 // Mevcut Üye Ekle — geçmiş başlangıç tarihi zorunlu
-export const existingMemberSchema = profileBase
-  .merge(membershipBase)
-  .extend({
-    start_date: z
-      .string()
-      .min(1, "Başlangıç tarihi zorunludur")
-      .refine((s) => {
-        const d = new Date(s);
-        const today = new Date();
-        today.setHours(23, 59, 59, 999);
-        return d <= today;
-      }, "Başlangıç tarihi bugünden sonra olamaz"),
-  })
-  .refine(requirePinWithPhone, pinError);
+export const existingMemberSchema = profileBase.merge(membershipBase).extend({
+  start_date: z
+    .string()
+    .min(1, "Başlangıç tarihi zorunludur")
+    .refine((s) => {
+      const d = new Date(s);
+      const today = new Date();
+      today.setHours(23, 59, 59, 999);
+      return d <= today;
+    }, "Başlangıç tarihi bugünden sonra olamaz"),
+});
 
 // Update — only profile fields
 export const memberUpdateSchema = profileBase;
